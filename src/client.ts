@@ -1,6 +1,9 @@
-import http from 'http';
-
-import { IntegrationProviderAuthenticationError } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationProviderAPIError,
+  IntegrationProviderAuthenticationError,
+} from '@jupiterone/integration-sdk-core';
+import { retry } from '@lifeomic/attempt';
+import fetch, { Response } from 'node-fetch';
 
 import { IntegrationConfig } from './config';
 import { AcmeUser, AcmeGroup } from './types';
@@ -17,36 +20,94 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
  */
 export class APIClient {
   constructor(readonly config: IntegrationConfig) {}
+  private baseUri = `https://api.cloudsploit.com/v2/`;
+  private withBaseUri = (path: string) => `${this.baseUri}${path}`;
+  private sessionId = '';
 
-  public async verifyAuthentication(): Promise<void> {
-    // TODO make the most light-weight request possible to validate
-    // authentication works with the provided credentials, throw an err if
-    // authentication fails
-    const request = new Promise<void>((resolve, reject) => {
-      http.get(
-        {
-          hostname: 'localhost',
-          port: 443,
-          path: '/api/v1/some/endpoint?limit=1',
-          agent: false,
-          timeout: 10,
+  private checkStatus = (response: Response) => {
+    if (response.ok) {
+      return response;
+    } else {
+      throw new IntegrationProviderAPIError(response);
+    }
+  };
+
+  private async request(
+    uri: string,
+    method: 'GET' | 'HEAD' = 'GET',
+  ): Promise<Response> {
+    const sessionId = await this.getSessionId();
+    try {
+      const options = {
+        method,
+        headers: {
+          Authorization: `Bearer ${sessionId}`,
         },
-        (res) => {
-          if (res.statusCode !== 200) {
-            reject(new Error('Provider authentication failed'));
-          } else {
-            resolve();
-          }
+      };
+
+      // Handle rate-limiting
+      const response = await retry(
+        async () => {
+          const res: Response = await fetch(uri, options);
+          this.checkStatus(res);
+          return res;
+        },
+        {
+          delay: 5000,
+          maxAttempts: 10,
+          handleError: (err, context) => {
+            if (
+              err.statusCode !== 429 ||
+              ([500, 502, 503].includes(err.statusCode) &&
+                context.attemptNum > 1)
+            )
+              context.abort();
+          },
         },
       );
-    });
+      return response.json();
+    } catch (err) {
+      throw new IntegrationProviderAPIError({
+        endpoint: uri,
+        status: err.status,
+        statusText: err.statusText,
+      });
+    }
+  }
 
+  private async getSessionId(): Promise<string> {
+    const uri = this.withBaseUri('signin');
+    if (!this.sessionId) {
+      try {
+        const res: Response = await fetch(uri, {
+          method: 'POST',
+          body: JSON.stringify({
+            email: this.config.username,
+            password: this.config.password,
+          }),
+        });
+        this.checkStatus(res);
+        const sessionId = await res.json();
+        this.sessionId = sessionId.data.token;
+      } catch (err) {
+        throw new IntegrationProviderAPIError({
+          endpoint: uri,
+          status: err.status,
+          statusText: err.statusText,
+        });
+      }
+    }
+    return this.sessionId;
+  }
+
+  public async verifyAuthentication(): Promise<void> {
+    const uri = this.withBaseUri('users');
     try {
-      await request;
+      await this.request(uri);
     } catch (err) {
       throw new IntegrationProviderAuthenticationError({
         cause: err,
-        endpoint: 'https://localhost/api/v1/some/endpoint?limit=1',
+        endpoint: uri,
         status: err.status,
         statusText: err.statusText,
       });

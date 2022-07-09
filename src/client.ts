@@ -13,6 +13,8 @@ import {
   AquasecTrivyGroup,
   AquasecTrivyGroupResponse,
   AquasecTrivyGroupDetails,
+  AquasecTrivyRoleResponse,
+  AquasecTrivyRole,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -153,6 +155,19 @@ export class APIClient {
 
   public async getGroup(id: string): Promise<AquasecTrivyGroupDetails> {
     return this.request(this.withBaseUri(`groups/${id}`));
+  }
+
+  public async iterateRoles(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRole>,
+  ): Promise<void> {
+    const res: AquasecTrivyRoleResponse = await this.request(
+      this.withBaseUri('access_management/roles', `https://${uri}/api/v2/`),
+    );
+
+    for (const role of res.result) {
+      await iteratee(role);
+    }
   }
 }
 

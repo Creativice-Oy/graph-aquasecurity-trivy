@@ -54,3 +54,24 @@ export type AquasecTrivyGroupDetails = AquasecTrivyMeta & {
     users: AquasecTrivyUser[];
   };
 };
+
+export type AquasecTrivyRole = {
+  name: string;
+  description: string;
+  author: string;
+  updated_at: string;
+  permission: string;
+  scopes: string[];
+  groups: AquasecTrivyUser[];
+  users: AquasecTrivyGroup[];
+};
+
+export type AquasecTrivyRoleResponse = {
+  count: number;
+  page: number;
+  pagesize: number;
+  result: AquasecTrivyRole[];
+  more_data_all_pages: number;
+  is_estimated_count: boolean;
+  feature_toggle: boolean;
+};

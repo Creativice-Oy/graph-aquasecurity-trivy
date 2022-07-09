@@ -18,13 +18,14 @@ export async function fetchGroups({
   jobState,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
   const apiClient = createAPIClient(instance.config);
+  const accountEntity = (await jobState.getData(ACCOUNT_ENTITY_KEY)) as Entity;
 
   await apiClient.iterateGroups(async (group) => {
     const groupEntity = await jobState.addEntity(createGroupEntity(group));
 
     await jobState.addRelationship(
       createDirectRelationship({
-        from: (await jobState.getData(ACCOUNT_ENTITY_KEY)) as Entity,
+        from: accountEntity,
         to: groupEntity,
         _class: RelationshipClass.HAS,
       }),

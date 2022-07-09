@@ -1,4 +1,5 @@
 import { accountSteps } from './account';
+import { actionSteps } from './action';
 import { groupSteps } from './groups';
 import { permissionSteps } from './permission';
 import { roleSteps } from './role';
@@ -10,6 +11,7 @@ const integrationSteps = [
   ...groupSteps,
   ...roleSteps,
   ...permissionSteps,
+  ...actionSteps,
 ];
 
 export { integrationSteps };

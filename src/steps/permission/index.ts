@@ -11,6 +11,7 @@ import { createAPIClient } from '../../client';
 import { IntegrationConfig } from '../../config';
 import { AquasecTrivyAccount } from '../../types';
 import { ACCOUNT_ENTITY_KEY } from '../account';
+import { createActionKey } from '../action/converter';
 import { Steps, Entities, Relationships } from '../constants';
 import { createPermissionEntity } from './converter';
 
@@ -56,6 +57,29 @@ export async function fetchPermissions({
   }
 }
 
+export async function buildPermissionActionRelationship({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: Entities.PERMISSION._type },
+    async (permissionEntity) => {
+      for (const action of permissionEntity.actions as string[]) {
+        const actionEntity = await jobState.findEntity(createActionKey(action));
+
+        if (actionEntity) {
+          await jobState.addRelationship(
+            createDirectRelationship({
+              from: permissionEntity,
+              to: actionEntity,
+              _class: RelationshipClass.HAS,
+            }),
+          );
+        }
+      }
+    },
+  );
+}
+
 export const permissionSteps: IntegrationStep<IntegrationConfig>[] = [
   {
     id: Steps.PERMISSION,
@@ -67,5 +91,13 @@ export const permissionSteps: IntegrationStep<IntegrationConfig>[] = [
     ],
     dependsOn: [Steps.ACCOUNT, Steps.USERS],
     executionHandler: fetchPermissions,
+  },
+  {
+    id: Steps.PERMISSION_ACTION_RELATIONSHIPS,
+    name: 'Build Permission -> Action Relationship',
+    entities: [],
+    relationships: [Relationships.PERMISSION_HAS_ACTION],
+    dependsOn: [Steps.PERMISSION, Steps.ACTION],
+    executionHandler: buildPermissionActionRelationship,
   },
 ];

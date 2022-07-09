@@ -33,4 +33,23 @@ export const permissionSpec: StepSpec<IntegrationConfig>[] = [
     dependsOn: ['fetch-account', 'fetch-users'],
     implemented: true,
   },
+  {
+    /**
+     * ENDPOINT: n/a
+     * PATTERN: Build child relationship
+     */
+    id: 'build-permission-action-relationships',
+    name: 'Build Permission -> Action Relationship',
+    entities: [],
+    relationships: [
+      {
+        _type: 'aquasec_trivy_permission_has_action',
+        sourceType: 'aquasec_trivy_permission',
+        _class: RelationshipClass.HAS,
+        targetType: 'aquasec_trivy_action',
+      },
+    ],
+    dependsOn: ['fetch-permissions', 'fetch-actions'],
+    implemented: true,
+  },
 ];

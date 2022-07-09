@@ -95,3 +95,18 @@ export type AquasecTrivyPermissionResponse = {
   is_estimated_count: boolean;
   feature_toggle: boolean;
 };
+
+export type AquasecTrivyAction = {
+  action: string;
+  name: string;
+  description: string;
+  has_write_access: boolean;
+  has_scope: boolean;
+};
+
+export type AquasecTrivyActionResponse = {
+  [key: string]: {
+    name: string;
+    actions: AquasecTrivyAction[];
+  }[];
+};

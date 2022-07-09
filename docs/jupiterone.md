@@ -99,6 +99,7 @@ The following entities are created:
 | Resources  | Entity `_type`             | Entity `_class` |
 | ---------- | -------------------------- | --------------- |
 | Account    | `aquasec_trivy_account`    | `Account`       |
+| Action     | `aquasec_trivy_action`     | `Entity`        |
 | Permission | `aquasec_trivy_permission` | `Entity`        |
 | Role       | `aquasec_trivy_role`       | `AccessRole`    |
 | User       | `aquasec_trivy_user`       | `User`          |
@@ -108,15 +109,17 @@ The following entities are created:
 
 The following relationships are created:
 
-| Source Entity `_type`   | Relationship `_class` | Target Entity `_type`      |
-| ----------------------- | --------------------- | -------------------------- |
-| `aquasec_trivy_account` | **HAS**               | `aquasec_trivy_group`      |
-| `aquasec_trivy_account` | **HAS**               | `aquasec_trivy_permission` |
-| `aquasec_trivy_account` | **HAS**               | `aquasec_trivy_role`       |
-| `aquasec_trivy_account` | **HAS**               | `aquasec_trivy_user`       |
-| `aquasec_trivy_group`   | **HAS**               | `aquasec_trivy_user`       |
-| `aquasec_trivy_user`    | **CREATED**           | `aquasec_trivy_permission` |
-| `aquasec_trivy_user`    | **CREATED**           | `aquasec_trivy_role`       |
+| Source Entity `_type`      | Relationship `_class` | Target Entity `_type`      |
+| -------------------------- | --------------------- | -------------------------- |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_action`     |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_group`      |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_permission` |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_role`       |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_user`       |
+| `aquasec_trivy_group`      | **HAS**               | `aquasec_trivy_user`       |
+| `aquasec_trivy_permission` | **HAS**               | `aquasec_trivy_action`     |
+| `aquasec_trivy_user`       | **CREATED**           | `aquasec_trivy_permission` |
+| `aquasec_trivy_user`       | **CREATED**           | `aquasec_trivy_role`       |
 
 <!--
 ********************************************************************************

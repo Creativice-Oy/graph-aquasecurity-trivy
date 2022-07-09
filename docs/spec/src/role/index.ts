@@ -23,8 +23,14 @@ export const roleSpec: StepSpec<IntegrationConfig>[] = [
         _class: RelationshipClass.HAS,
         targetType: 'aquasec_trivy_role',
       },
+      {
+        _type: 'aquasec_trivy_user_created_role',
+        sourceType: 'aquasec_trivy_user',
+        _class: RelationshipClass.CREATED,
+        targetType: 'aquasec_trivy_role',
+      },
     ],
-    dependsOn: ['fetch-account'],
+    dependsOn: ['fetch-account', 'fetch-users'],
     implemented: true,
   },
 ];

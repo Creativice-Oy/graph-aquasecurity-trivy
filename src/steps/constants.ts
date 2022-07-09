@@ -10,6 +10,7 @@ export const Steps = {
   ROLES: 'fetch-roles',
   GROUPS: 'fetch-groups',
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
+  ROLE_USER_RELATIONSHIPS: 'build-user-role-relationships',
 };
 
 export const Entities: Record<
@@ -42,6 +43,7 @@ export const Relationships: Record<
   | 'ACCOUNT_HAS_USER'
   | 'ACCOUNT_HAS_GROUP'
   | 'ACCOUNT_HAS_ROLE'
+  | 'USER_CREATED_ROLE'
   | 'GROUP_HAS_USER',
   StepRelationshipMetadata
 > = {
@@ -61,6 +63,12 @@ export const Relationships: Record<
     _type: 'aquasec_trivy_account_has_role',
     sourceType: Entities.ACCOUNT._type,
     _class: RelationshipClass.HAS,
+    targetType: Entities.ROLE._type,
+  },
+  USER_CREATED_ROLE: {
+    _type: 'aquasec_trivy_user_created_role',
+    sourceType: Entities.USER._type,
+    _class: RelationshipClass.CREATED,
     targetType: Entities.ROLE._type,
   },
   GROUP_HAS_USER: {

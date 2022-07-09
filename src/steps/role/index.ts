@@ -33,6 +33,20 @@ export async function fetchRoles({
           _class: RelationshipClass.HAS,
         }),
       );
+
+      await jobState.iterateEntities(
+        { _type: Entities.USER._type },
+        async (userEntity) => {
+          if (userEntity.email === role.author)
+            await jobState.addRelationship(
+              createDirectRelationship({
+                from: userEntity,
+                to: roleEntity,
+                _class: RelationshipClass.CREATED,
+              }),
+            );
+        },
+      );
     });
   }
 }
@@ -42,8 +56,11 @@ export const roleSteps: IntegrationStep<IntegrationConfig>[] = [
     id: Steps.ROLES,
     name: 'Fetch Roles',
     entities: [Entities.ROLE],
-    relationships: [Relationships.ACCOUNT_HAS_ROLE],
-    dependsOn: [Steps.ACCOUNT],
+    relationships: [
+      Relationships.ACCOUNT_HAS_ROLE,
+      Relationships.USER_CREATED_ROLE,
+    ],
+    dependsOn: [Steps.ACCOUNT, Steps.USERS],
     executionHandler: fetchRoles,
   },
 ];

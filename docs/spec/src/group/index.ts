@@ -1,27 +1,27 @@
 import { RelationshipClass, StepSpec } from '@jupiterone/integration-sdk-core';
 import { IntegrationConfig } from '../../../../src/config';
 
-export const accountSpec: StepSpec<IntegrationConfig>[] = [
+export const groupSpec: StepSpec<IntegrationConfig>[] = [
   {
     /**
      * ENDPOINT: n/a
      * PATTERN: Iterate entities
      */
-    id: 'fetch-users',
-    name: 'Fetch Users',
+    id: 'fetch-groups',
+    name: 'Fetch Groups',
     entities: [
       {
-        resourceName: 'User',
-        _type: 'aquasec_trivy_user',
-        _class: ['User'],
+        resourceName: 'UserGroup',
+        _type: 'aquasec_trivy_group',
+        _class: ['UserGroup'],
       },
     ],
     relationships: [
       {
-        _type: 'aquasec_trivy_account_has_user',
+        _type: 'aquasec_trivy_account_has_group',
         sourceType: 'aquasec_trivy_account',
         _class: RelationshipClass.HAS,
-        targetType: 'aquasec_trivy_user',
+        targetType: 'aquasec_trivy_group',
       },
     ],
     dependsOn: ['fetch-account'],

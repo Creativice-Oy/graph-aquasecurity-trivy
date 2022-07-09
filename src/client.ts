@@ -15,6 +15,8 @@ import {
   AquasecTrivyGroupDetails,
   AquasecTrivyRoleResponse,
   AquasecTrivyRole,
+  AquasecTrivyPermission,
+  AquasecTrivyPermissionResponse,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -167,6 +169,22 @@ export class APIClient {
 
     for (const role of res.result) {
       await iteratee(role);
+    }
+  }
+
+  public async iteratePermissions(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyPermission>,
+  ): Promise<void> {
+    const res: AquasecTrivyPermissionResponse = await this.request(
+      this.withBaseUri(
+        'access_management/permissions',
+        `https://${uri}/api/v2/`,
+      ),
+    );
+
+    for (const permission of res.result) {
+      await iteratee(permission);
     }
   }
 }

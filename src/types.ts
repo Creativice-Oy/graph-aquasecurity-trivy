@@ -75,3 +75,23 @@ export type AquasecTrivyRoleResponse = {
   is_estimated_count: boolean;
   feature_toggle: boolean;
 };
+
+export type AquasecTrivyPermission = {
+  name: string;
+  description: string;
+  author: string;
+  updated_at: string;
+  ui_access: boolean;
+  is_super: boolean;
+  actions: string[];
+};
+
+export type AquasecTrivyPermissionResponse = {
+  count: number;
+  page: number;
+  pagesize: number;
+  result: AquasecTrivyPermission[];
+  more_data_all_pages: number;
+  is_estimated_count: boolean;
+  feature_toggle: boolean;
+};

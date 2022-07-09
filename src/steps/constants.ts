@@ -8,13 +8,14 @@ export const Steps = {
   ACCOUNT: 'fetch-account',
   USERS: 'fetch-users',
   ROLES: 'fetch-roles',
+  PERMISSION: 'fetch-permissions',
   GROUPS: 'fetch-groups',
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
   ROLE_USER_RELATIONSHIPS: 'build-user-role-relationships',
 };
 
 export const Entities: Record<
-  'ACCOUNT' | 'GROUP' | 'USER' | 'ROLE',
+  'ACCOUNT' | 'GROUP' | 'USER' | 'ROLE' | 'PERMISSION',
   StepEntityMetadata
 > = {
   ACCOUNT: {
@@ -37,6 +38,11 @@ export const Entities: Record<
     _type: 'aquasec_trivy_role',
     _class: ['AccessRole'],
   },
+  PERMISSION: {
+    resourceName: 'Permission',
+    _type: 'aquasec_trivy_permission',
+    _class: ['Entity'],
+  },
 };
 
 export const Relationships: Record<
@@ -44,6 +50,8 @@ export const Relationships: Record<
   | 'ACCOUNT_HAS_GROUP'
   | 'ACCOUNT_HAS_ROLE'
   | 'USER_CREATED_ROLE'
+  | 'ACCOUNT_HAS_PERMISSION'
+  | 'USER_CREATED_PERMISSION'
   | 'GROUP_HAS_USER',
   StepRelationshipMetadata
 > = {
@@ -70,6 +78,18 @@ export const Relationships: Record<
     sourceType: Entities.USER._type,
     _class: RelationshipClass.CREATED,
     targetType: Entities.ROLE._type,
+  },
+  ACCOUNT_HAS_PERMISSION: {
+    _type: 'aquasec_trivy_account_has_permission',
+    sourceType: Entities.ACCOUNT._type,
+    _class: RelationshipClass.HAS,
+    targetType: Entities.PERMISSION._type,
+  },
+  USER_CREATED_PERMISSION: {
+    _type: 'aquasec_trivy_user_created_permission',
+    sourceType: Entities.USER._type,
+    _class: RelationshipClass.CREATED,
+    targetType: Entities.PERMISSION._type,
   },
   GROUP_HAS_USER: {
     _type: 'aquasec_trivy_group_has_user',

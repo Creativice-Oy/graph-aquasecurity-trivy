@@ -10,6 +10,9 @@ import {
   AquasecTrivyAccount,
   AquasecTrivyUserResponse,
   AquasecTrivyUser,
+  AquasecTrivyGroup,
+  AquasecTrivyGroupResponse,
+  AquasecTrivyGroupDetails,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -136,14 +139,20 @@ export class APIClient {
     }
   }
 
-  public async iterateGroups(iteratee: ResourceIteratee<any>): Promise<void> {
-    const res: AquasecTrivyUserResponse = await this.request(
+  public async iterateGroups(
+    iteratee: ResourceIteratee<AquasecTrivyGroup>,
+  ): Promise<void> {
+    const res: AquasecTrivyGroupResponse = await this.request(
       this.withBaseUri('groups'),
     );
 
     for (const group of res.data) {
       await iteratee(group);
     }
+  }
+
+  public async getGroup(id: string): Promise<AquasecTrivyGroupDetails> {
+    return this.request(this.withBaseUri(`groups/${id}`));
   }
 }
 

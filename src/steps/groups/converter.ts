@@ -1,6 +1,7 @@
 import {
   createIntegrationEntity,
   Entity,
+  parseTimePropertyValue,
 } from '@jupiterone/integration-sdk-core';
 import { AquasecTrivyGroup } from '../../types';
 
@@ -16,7 +17,7 @@ export function createGroupEntity(group: AquasecTrivyGroup): Entity {
         _class: Entities.GROUP._class,
         id: group.id.toString(),
         name: group.name,
-        created: group.created,
+        created: parseTimePropertyValue(group.created),
       },
     },
   });

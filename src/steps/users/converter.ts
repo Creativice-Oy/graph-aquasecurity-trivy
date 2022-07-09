@@ -1,17 +1,22 @@
 import {
   createIntegrationEntity,
   Entity,
+  parseTimePropertyValue,
 } from '@jupiterone/integration-sdk-core';
 import { AquasecTrivyUser } from '../../types';
 
 import { Entities } from '../constants';
+
+export function createUserKey(id: string): string {
+  return `aquasec_trivy_user:${id}`;
+}
 
 export function createUserEntity(user: AquasecTrivyUser): Entity {
   return createIntegrationEntity({
     entityData: {
       source: user,
       assign: {
-        _key: `aquasec_trivy_user:${user.id}`,
+        _key: createUserKey(user.id.toString()),
         _type: Entities.USER._type,
         _class: Entities.USER._class,
         id: user.id.toString(),
@@ -26,7 +31,7 @@ export function createUserEntity(user: AquasecTrivyUser): Entity {
         sendNewPlugins: user.send_new_plugins,
         sendNewRisks: user.send_new_risks,
         accountAdmin: user.account_admin,
-        created: user.created,
+        created: parseTimePropertyValue(user.created),
         multiAccount: user.multiaccount,
       },
     },

@@ -45,3 +45,12 @@ export type AquasecTrivyGroup = {
 export type AquasecTrivyGroupResponse = AquasecTrivyMeta & {
   data: AquasecTrivyGroup[];
 };
+
+export type AquasecTrivyGroupDetails = AquasecTrivyMeta & {
+  data: {
+    id: number;
+    name: string;
+    created: string;
+    users: AquasecTrivyUser[];
+  };
+};

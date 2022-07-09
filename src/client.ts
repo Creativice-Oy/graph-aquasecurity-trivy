@@ -19,6 +19,7 @@ import {
   AquasecTrivyPermissionResponse,
   AquasecTrivyAction,
   AquasecTrivyActionResponse,
+  AquasecTrivyRegistry,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -205,6 +206,19 @@ export class APIClient {
       for (const action of category.actions) {
         await iteratee(action);
       }
+    }
+  }
+
+  public async iterateRegistries(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRegistry>,
+  ): Promise<void> {
+    const res: AquasecTrivyRegistry[] = await this.request(
+      this.withBaseUri('registries', `https://${uri}/api/v1/`),
+    );
+
+    for (const registry of res) {
+      await iteratee(registry);
     }
   }
 }

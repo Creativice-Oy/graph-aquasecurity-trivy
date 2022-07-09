@@ -110,3 +110,35 @@ export type AquasecTrivyActionResponse = {
     actions: AquasecTrivyAction[];
   }[];
 };
+
+export type AquasecTrivyRegistry = {
+  name: string;
+  type: string;
+  detected_type: number;
+  description: string;
+  author: string;
+  lastupdate: number;
+  url: string;
+  username: string;
+  auto_pull: boolean;
+  registries_type: string;
+  auto_pull_time: string;
+  auto_pull_interval: number;
+  auto_pull_max: number;
+  pull_max_tags: number;
+  auto_pull_rescan: boolean;
+  webhook: {
+    enabled: boolean;
+    url: string;
+    auth_token: string;
+    un_quarantine: boolean;
+  };
+  registry_scan_timeout: number;
+  pull_image_age: string;
+  pull_image_count: number;
+  permission: string;
+  scanner_type: string;
+  cloud_resource: string;
+  image_creation_date_condition: string;
+  auto_pull_latest_xff_enabled: boolean;
+};

@@ -101,6 +101,7 @@ The following entities are created:
 | Account    | `aquasec_trivy_account`    | `Account`       |
 | Action     | `aquasec_trivy_action`     | `Entity`        |
 | Permission | `aquasec_trivy_permission` | `Entity`        |
+| Registry   | `aquasec_trivy_registry`   | `Entity`        |
 | Role       | `aquasec_trivy_role`       | `AccessRole`    |
 | User       | `aquasec_trivy_user`       | `User`          |
 | UserGroup  | `aquasec_trivy_group`      | `UserGroup`     |
@@ -114,6 +115,7 @@ The following relationships are created:
 | `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_action`     |
 | `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_group`      |
 | `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_permission` |
+| `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_registry`   |
 | `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_role`       |
 | `aquasec_trivy_account`    | **HAS**               | `aquasec_trivy_user`       |
 | `aquasec_trivy_group`      | **HAS**               | `aquasec_trivy_user`       |

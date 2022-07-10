@@ -12,6 +12,7 @@ import { IntegrationConfig } from '../../config';
 import { AquasecTrivyAccount } from '../../types';
 import { ACCOUNT_ENTITY_KEY } from '../account';
 import { Steps, Entities, Relationships } from '../constants';
+import { createRegistryKey } from '../registry/converter';
 import { createUserKey } from '../users/converter';
 import { createRepositoryEntity } from './converter';
 
@@ -67,6 +68,29 @@ export async function buildRepositoryUserRelationships({
   );
 }
 
+export async function buildRepositoryRegistryRelationships({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: Entities.REPOSITORY._type },
+    async (repositoryEntity) => {
+      const registryEntity = await jobState.findEntity(
+        createRegistryKey(repositoryEntity.registry as string),
+      );
+
+      if (registryEntity) {
+        await jobState.addRelationship(
+          createDirectRelationship({
+            from: registryEntity,
+            to: repositoryEntity,
+            _class: RelationshipClass.HAS,
+          }),
+        );
+      }
+    },
+  );
+}
+
 export const repositoryteps: IntegrationStep<IntegrationConfig>[] = [
   {
     id: Steps.REPOSITORIES,
@@ -83,5 +107,13 @@ export const repositoryteps: IntegrationStep<IntegrationConfig>[] = [
     relationships: [Relationships.USER_CREATED_REPOSITORY],
     dependsOn: [Steps.REPOSITORIES, Steps.USERS],
     executionHandler: buildRepositoryUserRelationships,
+  },
+  {
+    id: Steps.REPOSITORY_REGISTRY_RELATIONSHIPS,
+    name: 'Build Repository -> Registry Relationships',
+    entities: [],
+    relationships: [Relationships.REGISTRY_HAS_REPOSITORY],
+    dependsOn: [Steps.REPOSITORIES, Steps.REGISTRIES],
+    executionHandler: buildRepositoryRegistryRelationships,
   },
 ];

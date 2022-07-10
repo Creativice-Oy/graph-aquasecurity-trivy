@@ -46,4 +46,23 @@ export const repositorySpec: StepSpec<IntegrationConfig>[] = [
     dependsOn: ['fetch-repositories', 'fetch-users'],
     implemented: true,
   },
+  {
+    /**
+     * ENDPOINT: n/a
+     * PATTERN: Build child relationship
+     */
+    id: 'build-registry-repository-relationships',
+    name: 'Build Repository -> Registry Relationships',
+    entities: [],
+    relationships: [
+      {
+        _type: 'aquasec_trivy_registry_has_repository',
+        sourceType: 'aquasec_trivy_registry',
+        _class: RelationshipClass.HAS,
+        targetType: 'aquasec_trivy_repository',
+      },
+    ],
+    dependsOn: ['fetch-repositories', 'fetch-registries'],
+    implemented: true,
+  },
 ];

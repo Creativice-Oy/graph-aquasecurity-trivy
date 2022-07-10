@@ -20,6 +20,8 @@ import {
   AquasecTrivyAction,
   AquasecTrivyActionResponse,
   AquasecTrivyRegistry,
+  AquasecTrivyRepository,
+  AquasecTrivyRepositoryResponse,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -218,6 +220,19 @@ export class APIClient {
     );
 
     for (const registry of res) {
+      await iteratee(registry);
+    }
+  }
+
+  public async iterateRepositories(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRepository>,
+  ): Promise<void> {
+    const res: AquasecTrivyRepositoryResponse = await this.request(
+      this.withBaseUri('repositories', `https://${uri}/api/v2/`),
+    );
+
+    for (const registry of res.result) {
       await iteratee(registry);
     }
   }

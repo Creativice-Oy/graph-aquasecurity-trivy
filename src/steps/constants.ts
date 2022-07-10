@@ -12,12 +12,20 @@ export const Steps = {
   ACTION: 'fetch-actions',
   GROUPS: 'fetch-groups',
   REGISTRIES: 'fetch-registries',
+  REPOSITORIES: 'fetch-repositories',
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
   PERMISSION_ACTION_RELATIONSHIPS: 'build-permission-action-relationships',
 };
 
 export const Entities: Record<
-  'ACCOUNT' | 'GROUP' | 'USER' | 'ROLE' | 'PERMISSION' | 'ACTION' | 'REGISTRY',
+  | 'ACCOUNT'
+  | 'GROUP'
+  | 'USER'
+  | 'ROLE'
+  | 'PERMISSION'
+  | 'ACTION'
+  | 'REGISTRY'
+  | 'REPOSITORY',
   StepEntityMetadata
 > = {
   ACCOUNT: {
@@ -55,6 +63,11 @@ export const Entities: Record<
     _type: 'aquasec_trivy_registry',
     _class: ['Entity'],
   },
+  REPOSITORY: {
+    resourceName: 'Repository',
+    _type: 'aquasec_trivy_repository',
+    _class: ['Repository'],
+  },
 };
 
 export const Relationships: Record<
@@ -65,6 +78,7 @@ export const Relationships: Record<
   | 'ACCOUNT_HAS_PERMISSION'
   | 'ACCOUNT_HAS_ACTION'
   | 'ACCOUNT_HAS_REGISTRY'
+  | 'ACCOUNT_HAS_REPOSITORY'
   | 'USER_CREATED_PERMISSION'
   | 'PERMISSION_HAS_ACTION'
   | 'GROUP_HAS_USER',
@@ -129,5 +143,11 @@ export const Relationships: Record<
     sourceType: Entities.ACCOUNT._type,
     _class: RelationshipClass.HAS,
     targetType: Entities.REGISTRY._type,
+  },
+  ACCOUNT_HAS_REPOSITORY: {
+    _type: 'aquasec_trivy_account_has_repository',
+    sourceType: Entities.ACCOUNT._type,
+    _class: RelationshipClass.HAS,
+    targetType: Entities.REPOSITORY._type,
   },
 };

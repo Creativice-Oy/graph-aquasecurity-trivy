@@ -142,3 +142,47 @@ export type AquasecTrivyRegistry = {
   image_creation_date_condition: string;
   auto_pull_latest_xff_enabled: boolean;
 };
+
+export type AquasecTrivyRepository = {
+  name: string;
+  registry: string;
+  author: string;
+  policy: string;
+  dynamic_profiling: boolean;
+  num_images: number;
+  num_disallowed: number;
+  num_failed: number;
+  first_scan_failed: boolean;
+  crit_vulns: number;
+  high_vulns: number;
+  med_vulns: number;
+  low_vulns: number;
+  neg_vulns: number;
+  sensitive_data: number;
+  malware: number;
+  dta: {
+    Severity: string;
+    Count: number;
+  }[];
+  trusted_base_count: number;
+  whitelisted_images_count: number;
+  is_default_policy: boolean;
+  permission: string;
+  created_images_count: number;
+};
+
+export type AquasecTrivyRepositoryResponse = {
+  count: number;
+  page: number;
+  pagesize: number;
+  result: AquasecTrivyRepository[];
+  query: {
+    time: string;
+    scope: string;
+    ImageID: string;
+  };
+  more_data: number;
+  more_data_all_pages: number;
+  is_estimated_count: false;
+  feature_toggle: false;
+};

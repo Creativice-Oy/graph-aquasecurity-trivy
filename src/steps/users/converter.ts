@@ -16,7 +16,7 @@ export function createUserEntity(user: AquasecTrivyUser): Entity {
     entityData: {
       source: user,
       assign: {
-        _key: createUserKey(user.id.toString()),
+        _key: createUserKey(user.email),
         _type: Entities.USER._type,
         _class: Entities.USER._class,
         id: user.id.toString(),

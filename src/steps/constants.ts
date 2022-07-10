@@ -14,6 +14,8 @@ export const Steps = {
   REGISTRIES: 'fetch-registries',
   REPOSITORIES: 'fetch-repositories',
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
+  ROLE_USER_RELATIONSHIPS: 'build-user-role-relationships',
+  REPOSITORY_USER_RELATIONSHIPS: 'build-user-repository-relationships',
   PERMISSION_ACTION_RELATIONSHIPS: 'build-permission-action-relationships',
 };
 
@@ -80,6 +82,7 @@ export const Relationships: Record<
   | 'ACCOUNT_HAS_REGISTRY'
   | 'ACCOUNT_HAS_REPOSITORY'
   | 'USER_CREATED_PERMISSION'
+  | 'USER_CREATED_REPOSITORY'
   | 'PERMISSION_HAS_ACTION'
   | 'GROUP_HAS_USER',
   StepRelationshipMetadata
@@ -107,6 +110,12 @@ export const Relationships: Record<
     sourceType: Entities.USER._type,
     _class: RelationshipClass.CREATED,
     targetType: Entities.ROLE._type,
+  },
+  USER_CREATED_REPOSITORY: {
+    _type: 'aquasec_trivy_user_created_repository',
+    sourceType: Entities.USER._type,
+    _class: RelationshipClass.CREATED,
+    targetType: Entities.REPOSITORY._type,
   },
   ACCOUNT_HAS_PERMISSION: {
     _type: 'aquasec_trivy_account_has_permission',

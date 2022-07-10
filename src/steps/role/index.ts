@@ -12,6 +12,7 @@ import { IntegrationConfig } from '../../config';
 import { AquasecTrivyAccount } from '../../types';
 import { ACCOUNT_ENTITY_KEY } from '../account';
 import { Steps, Entities, Relationships } from '../constants';
+import { createUserKey } from '../users/converter';
 import { createRoleEntity } from './converter';
 
 export async function fetchRoles({
@@ -33,22 +34,31 @@ export async function fetchRoles({
           _class: RelationshipClass.HAS,
         }),
       );
-
-      await jobState.iterateEntities(
-        { _type: Entities.USER._type },
-        async (userEntity) => {
-          if (userEntity.email === role.author)
-            await jobState.addRelationship(
-              createDirectRelationship({
-                from: userEntity,
-                to: roleEntity,
-                _class: RelationshipClass.CREATED,
-              }),
-            );
-        },
-      );
     });
   }
+}
+
+export async function buildRoleUserRelationships({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: Entities.ROLE._type },
+    async (roleEntity) => {
+      const userEntity = await jobState.findEntity(
+        createUserKey(roleEntity.author as string),
+      );
+
+      if (userEntity) {
+        await jobState.addRelationship(
+          createDirectRelationship({
+            from: userEntity,
+            to: roleEntity,
+            _class: RelationshipClass.CREATED,
+          }),
+        );
+      }
+    },
+  );
 }
 
 export const roleSteps: IntegrationStep<IntegrationConfig>[] = [
@@ -56,11 +66,16 @@ export const roleSteps: IntegrationStep<IntegrationConfig>[] = [
     id: Steps.ROLES,
     name: 'Fetch Roles',
     entities: [Entities.ROLE],
-    relationships: [
-      Relationships.ACCOUNT_HAS_ROLE,
-      Relationships.USER_CREATED_ROLE,
-    ],
-    dependsOn: [Steps.ACCOUNT, Steps.USERS],
+    relationships: [Relationships.ACCOUNT_HAS_ROLE],
+    dependsOn: [Steps.ACCOUNT],
     executionHandler: fetchRoles,
+  },
+  {
+    id: Steps.ROLE_USER_RELATIONSHIPS,
+    name: 'Build Role -> User Relationships',
+    entities: [],
+    relationships: [Relationships.USER_CREATED_ROLE],
+    dependsOn: [Steps.ROLES, Steps.USERS],
+    executionHandler: buildRoleUserRelationships,
   },
 ];

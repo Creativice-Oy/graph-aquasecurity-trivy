@@ -123,6 +123,7 @@ The following relationships are created:
 | `aquasec_trivy_group`      | **HAS**               | `aquasec_trivy_user`       |
 | `aquasec_trivy_permission` | **HAS**               | `aquasec_trivy_action`     |
 | `aquasec_trivy_user`       | **CREATED**           | `aquasec_trivy_permission` |
+| `aquasec_trivy_user`       | **CREATED**           | `aquasec_trivy_repository` |
 | `aquasec_trivy_user`       | **CREATED**           | `aquasec_trivy_role`       |
 
 <!--

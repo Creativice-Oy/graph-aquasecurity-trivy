@@ -12,6 +12,7 @@ import { IntegrationConfig } from '../../config';
 import { AquasecTrivyAccount } from '../../types';
 import { ACCOUNT_ENTITY_KEY } from '../account';
 import { Steps, Entities, Relationships } from '../constants';
+import { createUserKey } from '../users/converter';
 import { createRepositoryEntity } from './converter';
 
 export async function fetchRepositories({
@@ -42,6 +43,30 @@ export async function fetchRepositories({
   }
 }
 
+export async function buildRepositoryUserRelationships({
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: Entities.REPOSITORY._type },
+    async (repositoryEntity) => {
+      const userEntity = await jobState.findEntity(
+        createUserKey(repositoryEntity.author as string),
+      );
+
+      if (userEntity) {
+        await jobState.addRelationship(
+          createDirectRelationship({
+            from: userEntity,
+            to: repositoryEntity,
+            _class: RelationshipClass.CREATED,
+          }),
+        );
+      }
+    },
+  );
+}
+
 export const repositoryteps: IntegrationStep<IntegrationConfig>[] = [
   {
     id: Steps.REPOSITORIES,
@@ -50,5 +75,13 @@ export const repositoryteps: IntegrationStep<IntegrationConfig>[] = [
     relationships: [Relationships.ACCOUNT_HAS_REPOSITORY],
     dependsOn: [Steps.ACCOUNT],
     executionHandler: fetchRepositories,
+  },
+  {
+    id: Steps.REPOSITORY_USER_RELATIONSHIPS,
+    name: 'Build Repository -> User Relationships',
+    entities: [],
+    relationships: [Relationships.USER_CREATED_REPOSITORY],
+    dependsOn: [Steps.REPOSITORIES, Steps.USERS],
+    executionHandler: buildRepositoryUserRelationships,
   },
 ];

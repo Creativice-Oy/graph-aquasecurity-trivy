@@ -13,7 +13,6 @@ export function createRepositoryKey(name: string): string {
 export function createRepositoryEntity(
   repository: AquasecTrivyRepository,
 ): Entity {
-  console.log(repository);
   return createIntegrationEntity({
     entityData: {
       source: repository,

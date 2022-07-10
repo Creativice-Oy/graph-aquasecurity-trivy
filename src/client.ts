@@ -22,6 +22,8 @@ import {
   AquasecTrivyRegistry,
   AquasecTrivyRepository,
   AquasecTrivyRepositoryResponse,
+  AquasecVulnerability,
+  AquasecVulnerabilityResponse,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -234,6 +236,19 @@ export class APIClient {
 
     for (const registry of res.result) {
       await iteratee(registry);
+    }
+  }
+
+  public async iterateVulnerabilities(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecVulnerability>,
+  ): Promise<void> {
+    const res: AquasecVulnerabilityResponse = await this.request(
+      this.withBaseUri('risks/vulnerabilities', `https://${uri}/api/v2/`),
+    );
+
+    for (const vulnerability of res.result) {
+      await iteratee(vulnerability);
     }
   }
 }

@@ -6,6 +6,7 @@ import { registrySteps } from './registry';
 import { repositoryteps } from './repository';
 import { roleSteps } from './role';
 import { userSteps } from './users';
+import { vulnerabilitySteps } from './vulnerability';
 
 const integrationSteps = [
   ...accountSteps,
@@ -16,6 +17,7 @@ const integrationSteps = [
   ...actionSteps,
   ...registrySteps,
   ...repositoryteps,
+  ...vulnerabilitySteps,
 ];
 
 export { integrationSteps };

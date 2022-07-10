@@ -13,6 +13,7 @@ export const Steps = {
   GROUPS: 'fetch-groups',
   REGISTRIES: 'fetch-registries',
   REPOSITORIES: 'fetch-repositories',
+  VULNERABILITIES: 'fetch-vulnerabilities',
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
   ROLE_USER_RELATIONSHIPS: 'build-user-role-relationships',
   REPOSITORY_USER_RELATIONSHIPS: 'build-user-repository-relationships',
@@ -28,6 +29,7 @@ export const Entities: Record<
   | 'PERMISSION'
   | 'ACTION'
   | 'REGISTRY'
+  | 'VULNERABILITY'
   | 'REPOSITORY',
   StepEntityMetadata
 > = {
@@ -71,6 +73,11 @@ export const Entities: Record<
     _type: 'aquasec_trivy_repository',
     _class: ['Repository'],
   },
+  VULNERABILITY: {
+    resourceName: 'Vulnerability',
+    _type: 'aquasec_trivy_vulnerability',
+    _class: ['Vulnerability'],
+  },
 };
 
 export const Relationships: Record<
@@ -85,6 +92,8 @@ export const Relationships: Record<
   | 'USER_CREATED_PERMISSION'
   | 'USER_CREATED_REPOSITORY'
   | 'REGISTRY_HAS_REPOSITORY'
+  | 'REPOSITORY_HAS_VULNERABILITY'
+  | 'ACCOUNT_HAS_VULNERABILTIY'
   | 'PERMISSION_HAS_ACTION'
   | 'GROUP_HAS_USER',
   StepRelationshipMetadata
@@ -131,6 +140,12 @@ export const Relationships: Record<
     _class: RelationshipClass.HAS,
     targetType: Entities.ACTION._type,
   },
+  ACCOUNT_HAS_VULNERABILTIY: {
+    _type: 'aquasec_trivy_account_has_vulnerability',
+    sourceType: Entities.ACCOUNT._type,
+    _class: RelationshipClass.HAS,
+    targetType: Entities.VULNERABILITY._type,
+  },
   USER_CREATED_PERMISSION: {
     _type: 'aquasec_trivy_user_created_permission',
     sourceType: Entities.USER._type,
@@ -166,5 +181,11 @@ export const Relationships: Record<
     sourceType: Entities.REGISTRY._type,
     _class: RelationshipClass.HAS,
     targetType: Entities.REPOSITORY._type,
+  },
+  REPOSITORY_HAS_VULNERABILITY: {
+    _type: 'aquasec_trivy_repository_has_vulnerability',
+    sourceType: Entities.REPOSITORY._type,
+    _class: RelationshipClass.HAS,
+    targetType: Entities.VULNERABILITY._type,
   },
 };

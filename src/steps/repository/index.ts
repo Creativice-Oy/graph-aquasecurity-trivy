@@ -45,7 +45,6 @@ export async function fetchRepositories({
 }
 
 export async function buildRepositoryUserRelationships({
-  instance,
   jobState,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
   await jobState.iterateEntities(

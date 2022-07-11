@@ -13,17 +13,13 @@ import {
   AquasecTrivyGroup,
   AquasecTrivyGroupResponse,
   AquasecTrivyGroupDetails,
-  AquasecTrivyRoleResponse,
   AquasecTrivyRole,
   AquasecTrivyPermission,
-  AquasecTrivyPermissionResponse,
   AquasecTrivyAction,
   AquasecTrivyActionResponse,
   AquasecTrivyRegistry,
   AquasecTrivyRepository,
-  AquasecTrivyRepositoryResponse,
   AquasecVulnerability,
-  AquasecVulnerabilityResponse,
 } from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
@@ -38,6 +34,7 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
  */
 export class APIClient {
   constructor(readonly config: IntegrationConfig) {}
+  private perPage = 5;
   private baseUri = 'https://api.cloudsploit.com/v2/';
   private envUri = 'https://prov.cloud.aquasec.com/v1/';
   private withBaseUri = (path: string, uri: string = this.baseUri) =>
@@ -91,6 +88,34 @@ export class APIClient {
         endpoint: uri,
         status: err.status,
         statusText: err.statusText,
+      });
+    }
+  }
+
+  private async paginatedRequest<T>(
+    uri: string,
+    method: 'GET' | 'HEAD' = 'GET',
+    iteratee: ResourceIteratee<T>,
+  ): Promise<void> {
+    let page = 0;
+    let count = 0;
+    try {
+      do {
+        page++;
+        const response = await this.request(
+          `${uri}?page=${page}&pagesize=${this.perPage}`,
+          method,
+        );
+
+        for (const result of response.result) await iteratee(result);
+        count = response.count;
+      } while (page * this.perPage < count);
+    } catch (err) {
+      throw new IntegrationProviderAPIError({
+        cause: new Error(err.message),
+        endpoint: uri,
+        status: err.statusCode,
+        statusText: err.message,
       });
     }
   }
@@ -170,29 +195,25 @@ export class APIClient {
     uri: string,
     iteratee: ResourceIteratee<AquasecTrivyRole>,
   ): Promise<void> {
-    const res: AquasecTrivyRoleResponse = await this.request(
+    await this.paginatedRequest<AquasecTrivyRole>(
       this.withBaseUri('access_management/roles', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
     );
-
-    for (const role of res.result) {
-      await iteratee(role);
-    }
   }
 
   public async iteratePermissions(
     uri: string,
     iteratee: ResourceIteratee<AquasecTrivyPermission>,
   ): Promise<void> {
-    const res: AquasecTrivyPermissionResponse = await this.request(
+    await this.paginatedRequest<AquasecTrivyPermission>(
       this.withBaseUri(
         'access_management/permissions',
         `https://${uri}/api/v2/`,
       ),
+      'GET',
+      iteratee,
     );
-
-    for (const permission of res.result) {
-      await iteratee(permission);
-    }
   }
 
   public async iterateActions(
@@ -230,26 +251,22 @@ export class APIClient {
     uri: string,
     iteratee: ResourceIteratee<AquasecTrivyRepository>,
   ): Promise<void> {
-    const res: AquasecTrivyRepositoryResponse = await this.request(
+    await this.paginatedRequest<AquasecTrivyRepository>(
       this.withBaseUri('repositories', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
     );
-
-    for (const registry of res.result) {
-      await iteratee(registry);
-    }
   }
 
   public async iterateVulnerabilities(
     uri: string,
     iteratee: ResourceIteratee<AquasecVulnerability>,
   ): Promise<void> {
-    const res: AquasecVulnerabilityResponse = await this.request(
+    await this.paginatedRequest<AquasecVulnerability>(
       this.withBaseUri('risks/vulnerabilities', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
     );
-
-    for (const vulnerability of res.result) {
-      await iteratee(vulnerability);
-    }
   }
 }
 

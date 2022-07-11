@@ -9,6 +9,7 @@ import { registrySpec } from './registry';
 import { repositorySpec } from './repository';
 import { roleSpec } from './role';
 import { userSpec } from './user';
+import { vulnerabilitySpec } from './vulnerability';
 
 export const invocationConfig: IntegrationSpecConfig<IntegrationConfig> = {
   integrationSteps: [
@@ -20,5 +21,6 @@ export const invocationConfig: IntegrationSpecConfig<IntegrationConfig> = {
     ...repositorySpec,
     ...registrySpec,
     ...actionSpec,
+    ...vulnerabilitySpec,
   ],
 };

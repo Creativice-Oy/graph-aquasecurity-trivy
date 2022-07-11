@@ -17,6 +17,8 @@ export const Steps = {
   GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
   ROLE_USER_RELATIONSHIPS: 'build-user-role-relationships',
   REPOSITORY_USER_RELATIONSHIPS: 'build-user-repository-relationships',
+  REPOSITORY_VULNERABILITY_RELATIONSHIPS:
+    'build-vulnerability-repository-relationships',
   REPOSITORY_REGISTRY_RELATIONSHIPS: 'build-registry-repository-relationships',
   PERMISSION_ACTION_RELATIONSHIPS: 'build-permission-action-relationships',
 };

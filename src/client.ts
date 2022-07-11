@@ -1,9 +1,26 @@
-import http from 'http';
-
-import { IntegrationProviderAuthenticationError } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationProviderAPIError,
+  IntegrationProviderAuthenticationError,
+} from '@jupiterone/integration-sdk-core';
+import { retry } from '@lifeomic/attempt';
+import fetch, { Response } from 'node-fetch';
 
 import { IntegrationConfig } from './config';
-import { AcmeUser, AcmeGroup } from './types';
+import {
+  AquasecTrivyAccount,
+  AquasecTrivyUserResponse,
+  AquasecTrivyUser,
+  AquasecTrivyGroup,
+  AquasecTrivyGroupResponse,
+  AquasecTrivyGroupDetails,
+  AquasecTrivyRole,
+  AquasecTrivyPermission,
+  AquasecTrivyAction,
+  AquasecTrivyActionResponse,
+  AquasecTrivyRegistry,
+  AquasecTrivyRepository,
+  AquasecVulnerability,
+} from './types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
@@ -17,105 +34,239 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
  */
 export class APIClient {
   constructor(readonly config: IntegrationConfig) {}
+  private perPage = 5;
+  private baseUri = 'https://api.cloudsploit.com/v2/';
+  private envUri = 'https://prov.cloud.aquasec.com/v1/';
+  private withBaseUri = (path: string, uri: string = this.baseUri) =>
+    `${uri}${path}`;
+  private sessionId = '';
 
-  public async verifyAuthentication(): Promise<void> {
-    // TODO make the most light-weight request possible to validate
-    // authentication works with the provided credentials, throw an err if
-    // authentication fails
-    const request = new Promise<void>((resolve, reject) => {
-      http.get(
-        {
-          hostname: 'localhost',
-          port: 443,
-          path: '/api/v1/some/endpoint?limit=1',
-          agent: false,
-          timeout: 10,
+  private checkStatus = (response: Response) => {
+    if (response.ok) {
+      return response;
+    } else {
+      throw new IntegrationProviderAPIError(response);
+    }
+  };
+
+  private async request(
+    uri: string,
+    method: 'GET' | 'HEAD' = 'GET',
+  ): Promise<Response> {
+    const sessionId = await this.getSessionId();
+    try {
+      const options = {
+        method,
+        headers: {
+          Authorization: `Bearer ${sessionId}`,
         },
-        (res) => {
-          if (res.statusCode !== 200) {
-            reject(new Error('Provider authentication failed'));
-          } else {
-            resolve();
-          }
+      };
+
+      // Handle rate-limiting
+      const response = await retry(
+        async () => {
+          const res: Response = await fetch(uri, options);
+          this.checkStatus(res);
+          return res;
+        },
+        {
+          delay: 5000,
+          maxAttempts: 10,
+          handleError: (err, context) => {
+            if (
+              err.statusCode !== 429 ||
+              ([500, 502, 503].includes(err.statusCode) &&
+                context.attemptNum > 1)
+            )
+              context.abort();
+          },
         },
       );
-    });
-
-    try {
-      await request;
+      return response.json();
     } catch (err) {
-      throw new IntegrationProviderAuthenticationError({
-        cause: err,
-        endpoint: 'https://localhost/api/v1/some/endpoint?limit=1',
+      throw new IntegrationProviderAPIError({
+        endpoint: uri,
         status: err.status,
         statusText: err.statusText,
       });
     }
   }
 
-  /**
-   * Iterates each user resource in the provider.
-   *
-   * @param iteratee receives each resource to produce entities/relationships
-   */
-  public async iterateUsers(
-    iteratee: ResourceIteratee<AcmeUser>,
+  private async paginatedRequest<T>(
+    uri: string,
+    method: 'GET' | 'HEAD' = 'GET',
+    iteratee: ResourceIteratee<T>,
   ): Promise<void> {
-    // TODO paginate an endpoint, invoke the iteratee with each record in the
-    // page
-    //
-    // The provider API will hopefully support pagination. Functions like this
-    // should maintain pagination state, and for each page, for each record in
-    // the page, invoke the `ResourceIteratee`. This will encourage a pattern
-    // where each resource is processed and dropped from memory.
+    let page = 0;
+    let count = 0;
+    try {
+      do {
+        page++;
+        const response = await this.request(
+          `${uri}?page=${page}&pagesize=${this.perPage}`,
+          method,
+        );
 
-    const users: AcmeUser[] = [
-      {
-        id: 'acme-user-1',
-        name: 'User One',
-      },
-      {
-        id: 'acme-user-2',
-        name: 'User Two',
-      },
-    ];
+        for (const result of response.result) await iteratee(result);
+        count = response.count;
+      } while (page * this.perPage < count);
+    } catch (err) {
+      throw new IntegrationProviderAPIError({
+        cause: new Error(err.message),
+        endpoint: uri,
+        status: err.statusCode,
+        statusText: err.message,
+      });
+    }
+  }
 
-    for (const user of users) {
+  private async getSessionId(): Promise<string> {
+    const uri = this.withBaseUri('signin');
+    if (!this.sessionId) {
+      try {
+        const res: Response = await fetch(uri, {
+          method: 'POST',
+          body: JSON.stringify({
+            email: this.config.username,
+            password: this.config.password,
+          }),
+        });
+        this.checkStatus(res);
+        const sessionId = await res.json();
+        this.sessionId = sessionId.data.token;
+      } catch (err) {
+        throw new IntegrationProviderAPIError({
+          endpoint: uri,
+          status: err.status,
+          statusText: err.statusText,
+        });
+      }
+    }
+    return this.sessionId;
+  }
+
+  public async verifyAuthentication(): Promise<void> {
+    const uri = this.withBaseUri('users');
+    try {
+      await this.request(uri);
+    } catch (err) {
+      throw new IntegrationProviderAuthenticationError({
+        cause: err,
+        endpoint: uri,
+        status: err.status,
+        statusText: err.statusText,
+      });
+    }
+  }
+
+  public async getAccount(): Promise<AquasecTrivyAccount> {
+    return this.request(this.withBaseUri('envs', this.envUri));
+  }
+
+  public async iterateUsers(
+    iteratee: ResourceIteratee<AquasecTrivyUser>,
+  ): Promise<void> {
+    const res: AquasecTrivyUserResponse = await this.request(
+      this.withBaseUri('users'),
+    );
+
+    for (const user of res.data) {
       await iteratee(user);
     }
   }
 
-  /**
-   * Iterates each group resource in the provider.
-   *
-   * @param iteratee receives each resource to produce entities/relationships
-   */
   public async iterateGroups(
-    iteratee: ResourceIteratee<AcmeGroup>,
+    iteratee: ResourceIteratee<AquasecTrivyGroup>,
   ): Promise<void> {
-    // TODO paginate an endpoint, invoke the iteratee with each record in the
-    // page
-    //
-    // The provider API will hopefully support pagination. Functions like this
-    // should maintain pagination state, and for each page, for each record in
-    // the page, invoke the `ResourceIteratee`. This will encourage a pattern
-    // where each resource is processed and dropped from memory.
+    const res: AquasecTrivyGroupResponse = await this.request(
+      this.withBaseUri('groups'),
+    );
 
-    const groups: AcmeGroup[] = [
-      {
-        id: 'acme-group-1',
-        name: 'Group One',
-        users: [
-          {
-            id: 'acme-user-1',
-          },
-        ],
-      },
-    ];
-
-    for (const group of groups) {
+    for (const group of res.data) {
       await iteratee(group);
     }
+  }
+
+  public async getGroup(id: string): Promise<AquasecTrivyGroupDetails> {
+    return this.request(this.withBaseUri(`groups/${id}`));
+  }
+
+  public async iterateRoles(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRole>,
+  ): Promise<void> {
+    await this.paginatedRequest<AquasecTrivyRole>(
+      this.withBaseUri('access_management/roles', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
+    );
+  }
+
+  public async iteratePermissions(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyPermission>,
+  ): Promise<void> {
+    await this.paginatedRequest<AquasecTrivyPermission>(
+      this.withBaseUri(
+        'access_management/permissions',
+        `https://${uri}/api/v2/`,
+      ),
+      'GET',
+      iteratee,
+    );
+  }
+
+  public async iterateActions(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyAction>,
+  ): Promise<void> {
+    const res: AquasecTrivyActionResponse = await this.request(
+      this.withBaseUri(
+        'access_management/permissions/actions',
+        `https://${uri}/api/v2/`,
+      ),
+    );
+
+    for (const category of res.groups) {
+      for (const action of category.actions) {
+        await iteratee(action);
+      }
+    }
+  }
+
+  public async iterateRegistries(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRegistry>,
+  ): Promise<void> {
+    const res: AquasecTrivyRegistry[] = await this.request(
+      this.withBaseUri('registries', `https://${uri}/api/v1/`),
+    );
+
+    for (const registry of res) {
+      await iteratee(registry);
+    }
+  }
+
+  public async iterateRepositories(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecTrivyRepository>,
+  ): Promise<void> {
+    await this.paginatedRequest<AquasecTrivyRepository>(
+      this.withBaseUri('repositories', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
+    );
+  }
+
+  public async iterateVulnerabilities(
+    uri: string,
+    iteratee: ResourceIteratee<AquasecVulnerability>,
+  ): Promise<void> {
+    await this.paginatedRequest<AquasecVulnerability>(
+      this.withBaseUri('risks/vulnerabilities', `https://${uri}/api/v2/`),
+      'GET',
+      iteratee,
+    );
   }
 }
 

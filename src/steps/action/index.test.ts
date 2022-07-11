@@ -9,13 +9,13 @@ afterEach(async () => {
   await recording.stop();
 });
 
-test('fetch-permission', async () => {
+test('fetch-actions', async () => {
   recording = setupProjectRecording({
     directory: __dirname,
-    name: 'fetch-permission',
+    name: 'fetch-actions',
   });
 
-  const stepConfig = buildStepTestConfigForStep(Steps.PERMISSION);
+  const stepConfig = buildStepTestConfigForStep(Steps.ACTION);
   const stepResult = await executeStepWithDependencies(stepConfig);
   expect(stepResult).toMatchStepMetadata(stepConfig);
 });
